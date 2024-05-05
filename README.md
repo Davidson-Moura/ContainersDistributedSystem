@@ -6,8 +6,8 @@
 # docker network create rede_modules
 
 ## Iniciar
-MY_PORT = porta do container
-PORTS = porta dos containers que pode se comunicar
+- MY_PORT = porta do container
+- PORTS = porta dos containers que pode se comunicar
 
 ### Iniciar 4 containers
 
