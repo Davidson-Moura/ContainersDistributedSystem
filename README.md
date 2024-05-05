@@ -3,7 +3,7 @@
 - docker build -t module .
 
 ## Criar rede
-# docker network create rede_modules
+- docker network create rede_modules
 
 ## Iniciar
 - MY_PORT = porta do container
