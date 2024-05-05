@@ -15,3 +15,15 @@ PORTS = porta dos containers que pode se comunicar
 - docker run -it -p 15742:15740 --rm --name=container2 --net=rede_modules -e MY_PORT=15742 -e PORTS="[15743]" module
 - docker run -it -p 15743:15740 --rm --name=container3 --net=rede_modules -e MY_PORT=15743 -e PORTS="[15744]" module
 - docker run -it -p 15744:15740 --rm --name=container4 --net=rede_modules -e MY_PORT=15744 -e PORTS="[15741]" module
+
+# Utilitários para testar os containers (Utils)
+
+## Adicionar a cada 10 segundos (addCounter)
+
+- docker build -t addcounter .
+- docker run --net=rede_modules -it addcounter
+
+## Exibir contador de todos os containers a cada 3 segundos (addCounter)
+
+- docker build -t observercounter .
+- docker run --net=rede_modules -it observercounter
