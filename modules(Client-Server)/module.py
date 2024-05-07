@@ -16,6 +16,8 @@ jsonPorts = os.environ.get('PORTS')
 ports = json.loads(jsonPorts) #[15741,15742,15743,15744]
 #ports.remove(realPort)
 
+receivedMessages = []
+
 class MyModule:
     realPort = realPort
     requestHost = "localhost"
@@ -50,15 +52,20 @@ def get_host(p):
     if(p == 15744):
         return "container4"
 
+def get_msgKey():
+    return str(MyModule.realPort) + "-" + str(MyModule.counter)
+
 with MeuServidorXMLRPC((host, realPort), schedule.run_pending) as server:
     print(host + ":" + str(realPort))
 
     # Functions
     def adder_function(x):
-        print("Adicionando ", x)
         MyModule.counter += x
-        propagate_the_change(x, MyModule.realPort) #asyncio.run(propagate_the_change(x))
-        print("Finalizando Adicionando ", x)
+
+        print(get_msgKey())
+        receivedMessages.append(get_msgKey())
+
+        propagate_the_change(x, MyModule.realPort, 0, get_msgKey()) #asyncio.run(propagate_the_change(x))
         return MyModule.counter
 
     def counter_function(): 
@@ -67,25 +74,27 @@ with MeuServidorXMLRPC((host, realPort), schedule.run_pending) as server:
     def get_url(p):
         return 'http://'+ get_host(p) + ':' + str(p)
     
-    def propagate_the_change(value, rPort): #async def propagate_the_change(value):
+    def propagate_the_change(value, originPort, itSendPort, msgKey): #async def propagate_the_change(value):
         for p in MyModule.requestPorts:
-            if(rPort != p):
+            if(originPort != p and p != itSendPort):
                 try:
-                    print("Propagando ", value)
                     requestUrl = get_url(p)
                     s = xmlrpc.client.ServerProxy(requestUrl)
-                    s.changedCounter(value, rPort)
+                    s.changedCounter(value, originPort, MyModule.realPort, msgKey)
                 except Exception as e:
                     print("Erro request:", e)
-        print("Finalizando propagando ", value)
         return 1
     
-    def changed_counter(valueAdded, rPort):
-        print("changed iniciando", valueAdded, rPort, MyModule.realPort)
-        if(rPort != MyModule.realPort):
+    def changed_counter(valueAdded, originPort, itSendPort, msgKey):
+        print("mensagem repassada", msgKey)
+        if msgKey in receivedMessages:
+            return 0
+        receivedMessages.append(msgKey)
+
+        if(originPort != MyModule.realPort):
             MyModule.counter += valueAdded
-            propagate_the_change(valueAdded, rPort)# asyncio.run(propagate_the_change(valueAdded))
-        print("changed finalizado")
+            propagate_the_change(valueAdded, originPort, itSendPort, msgKey)# asyncio.run(propagate_the_change(valueAdded))
+
         return 1
 
     # Requests
